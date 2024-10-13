@@ -12,10 +12,7 @@ from streamlit.components.v1 import html
 # html(
 #     '<img src="dino.jpg" alt="Description of the image" />'
 # )
-import numpy as np
-from bson import Binary
-import re
-from sklearn.metrics.pairwise import cosine_similarity
+>>>>>>>>> Temporary merge branch 2
 
 dotenv.load_dotenv()
 # Set up OpenAI API key
@@ -116,7 +113,7 @@ st.markdown("""
     .st-emotion-cache-ue6h4q {
         color: #2BFF00;
                     }
-            .st-emotion-cache-12h5x7g.e1nzilvr5{
+            .st-emotion-cache-12h5x7g.e1nzilvr5,.st-emotion-cache-1rsyhoq.e1nzilvr5 p, .st-emotion-cache-1rsyhoq.e1nzilvr5 ul{
             color: white;}
     h1, h2, h3, h4, .st-emotion-cache-12h5x7g{
         color: #2BFF00;
@@ -278,7 +275,7 @@ elif user_type == "Recruiter":
                 for resume, similarity in similar_resumes[:5]:  # Show top 5 matches
                     st.subheader(f"Candidate: {resume['candidate_name']} (Similarity: {similarity:.2f})")
                     st.write(f"Email: {resume['email']}")
-                    st.write(f"Resume Text: {resume['analysis'][:1000]}...")  # Show first 500 chars
+                    st.write(f"Resume Text: {resume['analysis']}...")  # Show first 500 chars
                     st.write("---")
             else:
                 st.write("No resumes found in the database.")
