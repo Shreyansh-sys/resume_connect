@@ -18,9 +18,9 @@ dotenv.load_dotenv()
 # Set up OpenAI API key
 openai_key = os.getenv("OPENAI_API_KEY")
 openai_prompt = os.getenv("OPENAI_PROMPT")
-
+mongo_uri = os.getenv("MONGO_URI")
 # Connect to MongoDB
-client = MongoClient('localhost:27017')  # Replace with your MongoDB connection string
+client = MongoClient(mongo_uri)  # Replace with your MongoDB connection string
 db = client['hired_db']  # Database
 collection = db['resumes']  # Collection
 
@@ -33,6 +33,13 @@ def extract_resume_text(uploaded_file):
             text += page.extract_text()
         return text
     return None
+
+# Function to combine resume text with form data
+def combine_resume_and_form_data(resume_text, form_data):
+    combined_data = f"Resume:\n{resume_text}\n\nForm Responses:\n"
+    for key, value in form_data.items():
+        combined_data += f"{key}: {value}\n"
+    return combined_data
 
 # Function for analyzing resume using OpenAI
 def analyze_resume(resume_text):
@@ -96,7 +103,7 @@ def clean_resume_text(resume_text):
     return cleaned_text
 
 # Streamlit UI
-st.title('Hired Simple Version')
+st.title('Lessume')
 
 st.markdown("""
     <style>
@@ -207,40 +214,59 @@ if user_type == "Candidate":
     # Display the analysis in a non-editable text area
     if st.session_state.analysis:
         st.text_area("Resume Analysis", st.session_state.analysis, height=200, disabled=True)
-        resume_embedding = get_text_embedding(st.session_state.cleaned_text)
+        # resume_embedding = get_text_embedding(st.session_state.cleaned_text)
 
     # Questions
     st.subheader("Please answer the following questions:")
-    question1 = st.text_input("Do you require sponsorship to work in the US?")
-    question2 = st.text_input("Are you currently in the USA")
-    question3 = st.text_input("What is your expected salary range?")
-    st.multiselect("Are you looking for ", ["Full Time", "Part Time"])
-    st.multiselect("Are you looking for ", ["In Person", "Hybrid", "Remote"])
-    st.radio("What is your citizenship status?", ["Citizen of U.S. or U.S Territory", "U.S Permanent Resident", "Refugee", "None of the above"])
-    st.radio("Are you the Spouse or Caregiver of an active U.S. Military member or a Veteran?", ["Yes", "No"])
-    st.radio("Are you currently in the U.S. Military or a Veteran?", ["Yes", "No"])
-    st.radio("Do you have a disability?", ["Yes", "No", "Prefer Not to Say"])
-    st.radio("Do you have limited proficiency in speaking, writing, reading, or understanding English?", ["Yes", "No", "Prefer not to say"])
-    st.radio("Are you of Hispanic or Latino heritage?", ["Yes", "No", "Prefer not to say"])
-    st.multiselect("Race - Please check all that apply:", ["African American", "American Indigenous", "Asian", "Pacific Islander", "White", "Prefer not to say"])
+    sponsorship = st.radio("Do you require sponsorship to work in the US?", ["Yes", "No"])
+    location = st.radio("Are you currently in the USA", ["Yes", "No"])
+    salary = st.text_input("What is your expected salary range?")
+    desired_hours = st.multiselect("Are you looking for ", ["Full Time", "Part Time"])
+    desired_location = st.multiselect("Are you looking for ", ["In Person", "Hybrid", "Remote"])
+    citizenship = st.radio("What is your citizenship status?", ["Citizen of U.S. or U.S Territory", "U.S Permanent Resident", "Refugee", "None of the above"])
+    veteran_relation = st.radio("Are you the Spouse or Caregiver of an active U.S. Military member or a Veteran?", ["Yes", "No"])
+    veteran_status = st.radio("Are you currently in the U.S. Military or a Veteran?", ["Yes", "No"])
+    disability = st.radio("Do you have a disability?", ["Yes", "No", "Prefer Not to Say"])
+    english_prof = st.radio("Do you have limited proficiency in speaking, writing, reading, or understanding English?", ["Yes", "No", "Prefer not to say"])
+    ethnicity = st.radio("Are you of Hispanic or Latino heritage?", ["Yes", "No", "Prefer not to say"])
+    race = st.multiselect("Race - Please check all that apply:", ["African American", "American Indigenous", "Asian", "Pacific Islander", "White", "Prefer not to say"])
 
     # Submit button
+    questions = [sponsorship, location, salary, desired_hours, desired_location, citizenship, veteran_relation, 
+                 veteran_status, disability, english_prof, ethnicity, race]
+
+    form_data = {
+        "sponsorship": sponsorship,
+        "location": location,
+        "salary": salary,
+        "desired_hours": desired_hours,
+        "desired_location": desired_location,
+        "citizenship": citizenship,
+        "veteran_relation": veteran_relation,
+        "veteran_status": veteran_status,
+        "disability": disability,
+        "english_prof": english_prof,
+        "ethnicity": ethnicity,
+        "race": race
+    }
+
     if st.button('Submit'):
-        if candidate_name and candidate_email and uploaded_file and question1 and question2 and question3:
+        if candidate_name and candidate_email and uploaded_file and all(questions):
             # Convert uploaded resume to binary
             resume_binary = Binary(uploaded_file.read())
+
+            # Combine resume text and form data
+            combined_data = combine_resume_and_form_data(st.session_state.cleaned_text, form_data)
+
+            combined_embedding = get_text_embedding(combined_data)
 
             # Create document for MongoDB
             resume_data = {
                 "candidate_name": candidate_name,
                 "email": candidate_email,
                 "resume": resume_binary,  # Store resume as binary
-                "answers": {
-                    "question1": question1,
-                    "question2": question2,
-                    "question3": question3
-                },
-                "embedding": resume_embedding,
+                "answers": form_data,
+                "embedding": combined_embedding,
                 "cleaned_text": st.session_state.cleaned_text, 
                 "analysis": st.session_state.analysis
             }
