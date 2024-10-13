@@ -214,6 +214,15 @@ if user_type == "Candidate":
     question1 = st.text_input("Do you require sponsorship to work in the US?")
     question2 = st.text_input("Are you currently in the USA")
     question3 = st.text_input("What is your expected salary range?")
+    st.multiselect("Are you looking for ", ["Full Time", "Part Time"])
+    st.multiselect("Are you looking for ", ["In Person", "Hybrid", "Remote"])
+    st.radio("What is your citizenship status?", ["Citizen of U.S. or U.S Territory", "U.S Permanent Resident", "Refugee", "None of the above"])
+    st.radio("Are you the Spouse or Caregiver of an active U.S. Military member or a Veteran?", ["Yes", "No"])
+    st.radio("Are you currently in the U.S. Military or a Veteran?", ["Yes", "No"])
+    st.radio("Do you have a disability?", ["Yes", "No", "Prefer Not to Say"])
+    st.radio("Do you have limited proficiency in speaking, writing, reading, or understanding English?", ["Yes", "No", "Prefer not to say"])
+    st.radio("Are you of Hispanic or Latino heritage?", ["Yes", "No", "Prefer not to say"])
+    st.multiselect("Race - Please check all that apply:", ["African American", "American Indigenous", "Asian", "Pacific Islander", "White", "Prefer not to say"])
 
     # Submit button
     if st.button('Submit'):
